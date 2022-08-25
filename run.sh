@@ -11,16 +11,17 @@ curl -d'{"name":"DB_PORT","value":"5432"}' $U/_/env
 curl -d'{"name":"DB_USERNAME","value":"postgres"}' $U/_/env
 curl -d'{"name":"DB_PASSWORD","value":"postgres3636"}' $U/_/env
 curl -d'{"name":"DB_DATABASE","value":"postgres"}' $U/_/env
-# curl -d'{"name":"KAFKA_PORT","value":"9092"}' $U/_/env
-# curl -d'{"name":"KAFKA_HOST","value":"localhost"}' $U/_/env
-# curl -d"{\"name\":\"OKAPI_URL\",\"value\":\"$U\"}" $U/_/env
-# curl -d'{"name":"ELASTICSEARCH_URL","value":"http://localhost:9200"}' $U/_/env
+curl -d'{"name":"KAFKA_PORT","value":"9092"}' $U/_/env
+curl -d'{"name":"KAFKA_HOST","value":"localhost"}' $U/_/env
+curl -d"{\"name\":\"OKAPI_URL\",\"value\":\"$U\"}" $U/_/env
+curl -d'{"name":"ELASTICSEARCH_URL","value":"http://localhost:9200"}' $U/_/env
 
 # Set of modules that are necessary to bootstrap admin user
 CORE_MODULES="mod-users mod-login mod-permissions mod-configuration"
 
-# TEST_MODULES="mod-pubsub"
-TEST_MODULES=""
+#TEST_MODULES="mod-pubsub"
+TEST_MODULES="mod-users-bl"
+#TEST_MODULES=""
 
 # TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
 
@@ -38,6 +39,7 @@ compile_module() {
 	mvn -DskipTests -Dmaven.test.skip=true verify
 	cd ..
 }
+
 register_module() {
 	local m=$2
 	echo "Register module $m"
@@ -92,6 +94,7 @@ install_modules() {
 	else
 		OPT=""
 	fi
+	echo "installing $j"
 	curl -s $OPT "-d$j" "$U/_/proxy/tenants/$T/install?purge=true"
 }
 
@@ -122,6 +125,15 @@ login_admin() {
 token=`awk '/x-okapi-token/ {print $2}' <headers|tr -d '[:space:]'`
 }
 
+login_with_expiry() {
+	curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$password\"}" $U/authn/login-with-expiry -v
+}
+
+login_users_bl() {
+	curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$password\"}" $U/bl-users/login -v
+}
+
+
 deploy_modules x "$CORE_MODULES"
 
 deploy_modules x mod-authtoken
@@ -139,13 +151,18 @@ deploy_modules $token "$TEST_MODULES"
 
 install_modules $token enable "$TEST_MODULES"
 
-#okapi_curl $token $U/perms/users/$puid/permissions -d'{"permissionName":"users-bl.all"}'
+okapi_curl $token $U/perms/users/$puid/permissions -d'{"permissionName":"users-bl.all"}'
 
-login_admin
+#login_admin
+
+#login_with_expiry
+
+export TOKEN=$token
+
+login_users_bl
 
 # okapi_curl $token $U/bl-users/password-reset/link -d"{\"userId\":\"$uid\"}" -o reset.json
 
 # token2=`jq -r '.link' < reset.json |sed -e 's@.*reset-password/@@'`
 
 # curl -s -HX-Okapi-Token:$token2 $U/bl-users/password-reset/validate -d'{}'
-
