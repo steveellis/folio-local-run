@@ -105,7 +105,7 @@ okapi_curl() {
 		local OPT="-HX-Okapi-Tenant:$T"
 	fi
 	shift
-	curl -s $OPT -HContent-Type:application/json $*
+	curl -s $OPT -HAuthtoken-Refresh-Cache:true -HContent-Type:application/json $*
 }
 
 make_adminuser() {
@@ -113,6 +113,7 @@ make_adminuser() {
 	local password=$3
 	
 	uid=`uuidgen`
+	echo "uid is $uid"
 	okapi_curl $1 -XDELETE "$U/users?query=username%3D%3D$username"
 	okapi_curl $1 -d"{\"username\":\"$username\",\"id\":\"$uid\",\"active\":true}" $U/users
 	okapi_curl $1 -d"{\"username\":\"$username\",\"userId\":\"$uid\",\"password\":\"$password\"}" $U/authn/credentials
@@ -157,11 +158,16 @@ okapi_curl $token $U/perms/users/$puid/permissions -d'{"permissionName":"users-b
 
 #login_with_expiry
 
+# Run with source to get this in the env.
 export TOKEN=$token
 
-login_users_bl
+# Gotta sleep a little bit still to see things that depend on the perm be set.
+sleep 2
 
-# okapi_curl $token $U/bl-users/password-reset/link -d"{\"userId\":\"$uid\"}" -o reset.json
+#login_users_bl
+
+# Try out
+okapi_curl $token $U/bl-users/password-reset/link -d"{\"userId\":\"$uid\"}" -o reset.json
 
 # token2=`jq -r '.link' < reset.json |sed -e 's@.*reset-password/@@'`
 
