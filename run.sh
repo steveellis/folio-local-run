@@ -20,8 +20,8 @@ curl -d'{"name":"ELASTICSEARCH_URL","value":"http://localhost:9200"}' $U/_/env
 CORE_MODULES="mod-users mod-login mod-permissions mod-configuration"
 
 #TEST_MODULES="mod-users-bl"
-TEST_MODULES="mod-users-bl mod-password-validator"
-#TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
+#TEST_MODULES="mod-users-bl mod-password-validator"
+TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
 
 compile_module() {
 	local m=$1
@@ -181,9 +181,10 @@ newpassword=P%assw0rd1
 # echo "Changing password"
 # curl -s -HX-Okapi-Token:$token $U/bl-users/settings/myprofile/password -HContent-Type:application/json -d"{\"userId\":\"$uid\",\"username\":\"$username\",\"password\":\"$password\",\"newPassword\":\"$newpassword\"}" -v
 
-echo "Resetting password"
+echo "Generating reset link"
 okapi_curl $token $U/bl-users/password-reset/link -d"{\"userId\":\"$uid\"}" -o reset.json
 
+# The token can be obtained from the reset link.
 token2=`jq -r '.link' < reset.json |sed -e 's@.*reset-password/@@'`
 
 echo "Validating password"
