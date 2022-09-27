@@ -19,11 +19,9 @@ curl -d'{"name":"ELASTICSEARCH_URL","value":"http://localhost:9200"}' $U/_/env
 # Set of modules that are necessary to bootstrap admin user
 CORE_MODULES="mod-users mod-login mod-permissions mod-configuration"
 
-#TEST_MODULES="mod-pubsub"
-TEST_MODULES="mod-users-bl"
-#TEST_MODULES=""
-
-# TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
+#TEST_MODULES="mod-users-bl"
+TEST_MODULES="mod-users-bl mod-password-validator"
+#TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
 
 compile_module() {
 	local m=$1
@@ -134,6 +132,10 @@ login_users_bl() {
 	curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$password\"}" $U/bl-users/login -v
 }
 
+login_users_bl_expand_perms() {
+	curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$password\"}" $U/bl-users/login?expandPermissions=true -v
+}
+
 
 deploy_modules x "$CORE_MODULES"
 
@@ -150,7 +152,11 @@ login_admin
 
 deploy_modules $token "$TEST_MODULES"
 
+sleep 5
+
 install_modules $token enable "$TEST_MODULES"
+
+sleep 5
 
 okapi_curl $token $U/perms/users/$puid/permissions -d'{"permissionName":"users-bl.all"}'
 
@@ -164,11 +170,27 @@ export TOKEN=$token
 # Gotta sleep a little bit still to see things that depend on the perm be set.
 sleep 2
 
-#login_users_bl
+login_users_bl
+
+#login_users_bl_expand_perms
 
 # Try out
+
+newpassword=P%assw0rd1
+
+# echo "Changing password"
+# curl -s -HX-Okapi-Token:$token $U/bl-users/settings/myprofile/password -HContent-Type:application/json -d"{\"userId\":\"$uid\",\"username\":\"$username\",\"password\":\"$password\",\"newPassword\":\"$newpassword\"}" -v
+
+echo "Resetting password"
 okapi_curl $token $U/bl-users/password-reset/link -d"{\"userId\":\"$uid\"}" -o reset.json
 
-# token2=`jq -r '.link' < reset.json |sed -e 's@.*reset-password/@@'`
+token2=`jq -r '.link' < reset.json |sed -e 's@.*reset-password/@@'`
 
-# curl -s -HX-Okapi-Token:$token2 $U/bl-users/password-reset/validate -d'{}'
+echo "Validating password"
+curl -s -HX-Okapi-Token:$token2 $U/bl-users/password-reset/validate -d'{}' -v
+
+echo "Resetting password"
+curl -s -HX-Okapi-Token:$token2 $U/bl-users/password-reset/reset -HContent-Type:application/json -d"{\"newPassword\":\"$newpassword\"}" -v
+
+echo "Logging in with new password"
+curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$newpassword\"}" $U/bl-users/login -v
