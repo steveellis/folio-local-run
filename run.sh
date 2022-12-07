@@ -20,9 +20,14 @@ curl -d'{"name":"ELASTICSEARCH_URL","value":"http://localhost:9200"}' $U/_/env
 # NOTE Don't include mod-authtoken here.
 CORE_MODULES="mod-users mod-login mod-permissions mod-configuration"
 
+# Modules required for mod-inn-reach.
 TEST_MODULES="mod-pubsub mod-source-record-storage mod-inventory-storage mod-circulation-storage mod-inventory mod-patron-blocks mod-calendar mod-event-config mod-template-engine mod-email mod-sender mod-notify mod-feesfines mod-notes mod-circulation mod-patron mod-inn-reach"
+
+# Modules required after the minimal platform.
 #TEST_MODULES="mod-users-bl"
 #TEST_MODULES="mod-users-bl mod-password-validator"
+
+# Modules that used to be required for mod-users-bl before the minimal platform.
 #TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
 
 
