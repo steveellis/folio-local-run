@@ -20,8 +20,8 @@ curl -d'{"name":"ELASTICSEARCH_URL","value":"http://localhost:9200"}' $U/_/env
 CORE_MODULES="mod-users mod-login mod-permissions mod-configuration"
 
 #TEST_MODULES="mod-users-bl"
-#TEST_MODULES="mod-users-bl mod-password-validator"
-TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
+TEST_MODULES="mod-password-validator mod-users-bl"
+#TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
 
 compile_module() {
 	local m=$1
@@ -144,9 +144,18 @@ deploy_modules x mod-authtoken
 install_modules x enable "$CORE_MODULES"
 install_modules x enable okapi
 
+# echo "Sleeping before making admin user"
+# sleep 5
+
 make_adminuser x $username $password
 
+# echo "Sleeping before enabling mod-authtoken"
+# sleep 5
+
 install_modules x enable mod-authtoken
+
+# echo "Sleeping before logging in"
+# sleep 5
 
 login_admin
 
@@ -156,19 +165,19 @@ sleep 5
 
 install_modules $token enable "$TEST_MODULES"
 
-sleep 5
+#sleep 5
 
-okapi_curl $token $U/perms/users/$puid/permissions -d'{"permissionName":"users-bl.all"}'
+#okapi_curl $token $U/perms/users/$puid/permissions -d'{"permissionName":"users-bl.all"}'
 
 #login_admin
 
 #login_with_expiry
 
 # Run with source to get this in the env.
-export TOKEN=$token
+# export TOKEN=$token
 
 # Gotta sleep a little bit still to see things that depend on the perm be set.
-sleep 2
+sleep 5
 
 login_users_bl
 
@@ -176,22 +185,22 @@ login_users_bl
 
 # Try out
 
-newpassword=P%assw0rd1
+# newpassword=P%assw0rd1
 
-# echo "Changing password"
-# curl -s -HX-Okapi-Token:$token $U/bl-users/settings/myprofile/password -HContent-Type:application/json -d"{\"userId\":\"$uid\",\"username\":\"$username\",\"password\":\"$password\",\"newPassword\":\"$newpassword\"}" -v
+# # echo "Changing password"
+# # curl -s -HX-Okapi-Token:$token $U/bl-users/settings/myprofile/password -HContent-Type:application/json -d"{\"userId\":\"$uid\",\"username\":\"$username\",\"password\":\"$password\",\"newPassword\":\"$newpassword\"}" -v
 
-echo "Generating reset link"
-okapi_curl $token $U/bl-users/password-reset/link -d"{\"userId\":\"$uid\"}" -o reset.json
+# echo "Generating reset link"
+# okapi_curl $token $U/bl-users/password-reset/link -d"{\"userId\":\"$uid\"}" -o reset.json
 
-# The token can be obtained from the reset link.
-token2=`jq -r '.link' < reset.json |sed -e 's@.*reset-password/@@'`
+# # The token can be obtained from the reset link.
+# token2=`jq -r '.link' < reset.json |sed -e 's@.*reset-password/@@'`
 
-echo "Validating password"
-curl -s -HX-Okapi-Token:$token2 $U/bl-users/password-reset/validate -d'{}' -v
+# echo "Validating password"
+# curl -s -HX-Okapi-Token:$token2 $U/bl-users/password-reset/validate -d'{}' -v
 
-echo "Resetting password"
-curl -s -HX-Okapi-Token:$token2 $U/bl-users/password-reset/reset -HContent-Type:application/json -d"{\"newPassword\":\"$newpassword\"}" -v
+# echo "Resetting password"
+# curl -s -HX-Okapi-Token:$token2 $U/bl-users/password-reset/reset -HContent-Type:application/json -d"{\"newPassword\":\"$newpassword\"}" -v
 
-echo "Logging in with new password"
-curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$newpassword\"}" $U/bl-users/login -v
+# echo "Logging in with new password"
+# curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$newpassword\"}" $U/bl-users/login -v
