@@ -15,11 +15,12 @@ curl -d'{"name":"KAFKA_PORT","value":"9092"}' $U/_/env
 curl -d'{"name":"KAFKA_HOST","value":"localhost"}' $U/_/env
 curl -d"{\"name\":\"OKAPI_URL\",\"value\":\"$U\"}" $U/_/env
 curl -d'{"name":"ELASTICSEARCH_URL","value":"http://localhost:9200"}' $U/_/env
+#curl -d'{"name":"TOKEN_EXPIRATION_SECONDS","value":"tenantId:testTenant1,accessToken:1000,refreshToken:100000;tenantId:testlib14,accessToken:2000,refreshToken:200000;accessToken:3000,refreshToken:300000"}' $U/_/env
 
 # Set of modules that are necessary to bootstrap admin user
 CORE_MODULES="mod-users mod-login mod-permissions mod-configuration"
 
-#TEST_MODULES="mod-users-bl"
+#TEST_MODULES="mod-users-bl"tenantId:testTenant1,accessToken:1000,refreshToken:100000;tenantId:testlib14,accessToken:2000,refreshToken:200000;accessToken:3000,refreshToken:300000
 TEST_MODULES="mod-password-validator mod-users-bl"
 #TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
 
@@ -128,8 +129,16 @@ login_with_expiry() {
 	curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$password\"}" $U/authn/login-with-expiry -v
 }
 
+login() {
+	curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$password\"}" $U/authn/login -v
+}
+
 login_users_bl() {
 	curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$password\"}" $U/bl-users/login -v
+}
+
+login_with_expiry_users_bl() {
+	curl -s -Dheaders -HX-Okapi-Tenant:$T -HContent-Type:application/json -d"{\"username\":\"$username\",\"password\":\"$password\"}" $U/bl-users/login-with-expiry -v
 }
 
 login_users_bl_expand_perms() {
@@ -167,7 +176,7 @@ install_modules $token enable "$TEST_MODULES"
 
 #sleep 5
 
-#okapi_curl $token $U/perms/users/$puid/permissions -d'{"permissionName":"users-bl.all"}'
+okapi_curl $token $U/perms/users/$puid/permissions -d'{"permissionName":"users-bl.all"}'
 
 #login_admin
 
@@ -179,7 +188,9 @@ install_modules $token enable "$TEST_MODULES"
 # Gotta sleep a little bit still to see things that depend on the perm be set.
 sleep 5
 
-login_users_bl
+#login_users_bl
+login_with_expiry_users_bl
+#login
 
 #login_users_bl_expand_perms
 
