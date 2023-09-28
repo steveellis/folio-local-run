@@ -15,13 +15,12 @@ curl -d'{"name":"KAFKA_PORT","value":"9092"}' $U/_/env
 curl -d'{"name":"KAFKA_HOST","value":"localhost"}' $U/_/env
 curl -d"{\"name\":\"OKAPI_URL\",\"value\":\"$U\"}" $U/_/env
 curl -d'{"name":"ELASTICSEARCH_URL","value":"http://localhost:9200"}' $U/_/env
-#curl -d'{"name":"TOKEN_EXPIRATION_SECONDS","value":"tenantId:testTenant1,accessToken:1000,refreshToken:100000;tenantId:testlib14,accessToken:2000,refreshToken:200000;accessToken:3000,refreshToken:300000"}' $U/_/env
+curl -d'{"name":"TOKEN_EXPIRATION_SECONDS","value":"tenantId:testTenant1,accessToken:1000,refreshToken:100000;tenantId:testlib14,accessToken:2000,refreshToken:200000;accessToken:3000,refreshToken:300000"}' $U/_/env
 
 # Set of modules that are necessary to bootstrap admin user
 CORE_MODULES="mod-users mod-login mod-permissions mod-configuration"
 
-#TEST_MODULES="mod-users-bl"tenantId:testTenant1,accessToken:1000,refreshToken:100000;tenantId:testlib14,accessToken:2000,refreshToken:200000;accessToken:3000,refreshToken:300000
-TEST_MODULES="mod-password-validator mod-users-bl"
+#TEST_MODULES="mod-password-validator mod-users-bl"
 #TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
 
 compile_module() {
@@ -51,7 +50,7 @@ register_module() {
 		exit 1
 	fi
 	if test "$1" != "x"; then
-		OPT=-HX-Okapi-Token:$1
+		OPT=-HX-Okapi-Token:$1onver
 	else
 		OPT=""
 	fi
