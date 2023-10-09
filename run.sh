@@ -20,7 +20,7 @@ curl -d'{"name":"TOKEN_EXPIRATION_SECONDS","value":"tenantId:testTenant1,accessT
 # Set of modules that are necessary to bootstrap admin user
 CORE_MODULES="mod-users mod-login mod-permissions mod-configuration"
 
-#TEST_MODULES="mod-password-validator mod-users-bl"
+TEST_MODULES="mod-password-validator mod-users-bl"
 #TEST_MODULES="mod-inventory-storage mod-password-validator mod-event-config mod-pubsub mod-circulation-storage mod-template-engine mod-email mod-sender mod-notify mod-users-bl mod-search"
 
 compile_module() {
@@ -50,7 +50,7 @@ register_module() {
 		exit 1
 	fi
 	if test "$1" != "x"; then
-		OPT=-HX-Okapi-Token:$1onver
+		OPT=-HX-Okapi-Token:$1
 	else
 		OPT=""
 	fi
